@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bu şarkılar sana :3 ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #080808; font-family: 'Quicksand', sans-serif; perspective: 2500px; }
+        
+        #fadeOverlay { position: fixed; inset: 0; background: black; z-index: 20000; opacity: 0; pointer-events: none; transition: opacity 1.5s ease-in-out; }
+        .bg { position: fixed; inset: 0; background: radial-gradient(circle at 20% 30%, #2d131a 0%, #080808 60%), radial-gradient(circle at 80% 70%, #0d1b2a 0%, #080808 60%); z-index: -1; }
+
+        /* GİRİŞ VE FİNAL EKRANI NEONLARI */
+        #entry, #finalScreen { position: fixed; inset: 0; z-index: 9999; background: #080808; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #finalScreen { display: none; z-index: 10000; opacity: 0; transition: opacity 2s; }
+
+        .neon-text {
+            font-family: 'Pacifico', cursive; font-size: 45px; color: #fff; text-align: center;
+            text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 42px #ff85a1, 0 0 82px #ff85a1;
+            animation: flicker 2s infinite alternate;
+        }
+
+        .play-btn { background: transparent; border: 2px solid #81D4FA; color: #81D4FA; padding: 15px 45px; border-radius: 50px; font-family: 'Pacifico'; font-size: 20px; cursor: pointer; transition: 0.4s; margin-top: 40px;}
+        .play-btn:hover { background: #81D4FA; color: #000; box-shadow: 0 0 30px #81D4FA; transform: scale(1.1); }
+
+        /* DEFTER YAPISI */
+        #stage { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; transform-style: preserve-3d; opacity: 0; transition: opacity 2s; }
+        .notebook { width: 340px; height: 500px; position: relative; transform-style: preserve-3d; margin-bottom: 60px; }
+        .page {
+            position: absolute; width: 100%; height: 100%; background: #121212; border: 1px solid #282828;
+            border-radius: 5px 25px 25px 5px; transform-origin: left; transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            backface-visibility: hidden; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+            box-shadow: -15px 15px 45px rgba(0,0,0,0.9);
+            justify-content: center; /* İçeriği dikeyde ortalamak için eklendi */
+        }
+        .page.flipped { transform: rotateY(-175deg); }
+
+        /* İÇERİK STİLLERİ */
+        .cover-art { width: 280px; height: 280px; border-radius: 12px; background-size: cover; background-position: center; margin-bottom: 20px; border: 1px solid #333; }
+        .song-title { color: #fff; font-size: 19px; font-weight: 600; width: 100%; margin: 0; text-align: center; }
+        .artist { color: #b3b3b3; font-size: 14px; width: 100%; margin: 5px 0 15px 0; text-align: center; }
+        .player-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
+        .progress { height: 100%; background: #FFB6C1; border-radius: 3px; box-shadow: 0 0 10px #FFB6C1; transition: width 0.5s ease; }
+        
+        /* Şiir kısımları kaldırıldığı için personal-note stili silindi veya pasifize edildi */
+
+        .controls { display: flex; gap: 50px; z-index: 5000; }
+        .btn-nav { background: rgba(255, 255, 255, 0.05); border: 1px solid #FFB6C1; color: #FFB6C1; padding: 10px 40px; border-radius: 50px; cursor: pointer; font-family: 'Pacifico'; font-size: 18px; transition: 0.3s; }
+        .btn-nav:hover { background: #FFB6C1; color: #000; box-shadow: 0 0 20px #FFB6C1; }
+
+        @keyframes flicker { 0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 42px #ff85a1, 0 0 82px #ff85a1; } 20%, 24%, 55% { text-shadow: none; } }
+    </style>
+</head>
+<body>
+
+    <div id="fadeOverlay"></div>
+    <div class="bg"></div>
+    <audio id="flip" src="https://www.myinstants.com/media/sounds/page-flip-01a.mp3"></audio>
+
+    <div id="entry">
+        <div class="neon-text">Bu şarkılar sana :3</div>
+        <button class="play-btn" onclick="handleStart()">Play F</button>
+    </div>
+
+    <div id="finalScreen">
+        <div class="neon-text" style="font-size: 50px;">T & F maybe in love?</div>
+    </div>
+
+    <div id="stage">
+        <div class="notebook" id="notebook"></div>
+        <div class="controls">
+            <button class="btn-nav" onclick="prev()">⬅ Geri</button>
+            <button class="btn-nav" onclick="next()">İleri ➡</button>
+        </div>
+    </div>
+
+    <script>
+        // Playlist 25 şarkıya tamamlandı. 'n' (note) kısımları silindi.
+        const playlist = [
+            { s: "Bal", a: "Duman", c: "1.jpg", m: "1.mp3" },
+            { s: "Öyle Güzelsin Ki", a: "Yüzyüzeyken Konuşuruz", c: "2.jpg", m: "2.mp3" },
+            { s: "Dünyanın En Güzel Kızı", a: "Mavi Sakal", c: "3.jpg", m: "3.mp3" },
+            { s: "Birds of a Feather", a: "Billie Eilish", c: "4.jpg", m: "4.mp3" },
+            { s: "Cambaz", a: "Mor ve Ötesi", c: "5.jpg", m: "5.mp3" },
+            { s: "Not Allowed", a: "TV Girl", c: "6.jpg", m: "6.mp3" },
+            { s: "Yara", a: "Kalben", c: "7.jpg", m: "7.mp3" },
+            { s: "Sad Girl", a: "Lana Del Rey", c: "8.jpg", m: "8.mp3" },
+            { s: "Mind Over Matter", a: "Young the Giant", c: "9.jpg", m: "9.mp3" },
+            { s: "505", a: "Arctic Monkeys", c: "10.jpg", m: "10.mp3" },
+            { s: "Ah Canım Sevgilim", a: "Rei 9", c: "11.jpg", m: "11.mp3" },
+            { s: "En Güzel Yerinde Evin", a: "Büyük Ev Ablukada", c: "12.jpg", m: "12.mp3" },
+            { s: "Espresso", a: "Sabrina Carpenter", c: "13.jpg", m: "13.mp3" },
+            { s: "Aşk Nerden Nereye", a: "Gripin", c: "14.jpg", m: "14.mp3" },
+            { s: "Son", a: "İnsanlar Gerçek Olsa", c: "15.jpg", m: "15.mp3" },
+            { s: "Rüyalarda Buruşmuşum", a: "Adamlar", c: "16.jpg", m: "16.mp3" },
+            { s: "Teni Tenime", a: "Sena Şener", c: "17.jpg", m: "17.mp3" },
+            { s: "Sar Bu Şehri", a: "Can Ozan", c: "18.jpg", m: "18.mp3" },
+            { s: "Hayatı Yaşa", a: "Duman", c: "19.jpg", m: "19.mp3" },
+            { s: "Lovesong", a: "Adele", c: "20.jpg", m: "20.mp3" },
+            { s: "Far From Any Road", a: "The Handsome Family", c: "21.jpg", m: "21.mp3" },
+            { s: "Poison Tree", a: "Grouper", c: "22.jpg", m: "22.mp3" },
+            { s: "Düşünürüm", a: "Kalben", c: "23.jpg", m: "23.mp3" },
+            { s: "Wicked Game", a: "Chris Isaak", c: "24.jpg", m: "24.mp3" },
+            // 25. Şarkı eklendi (Örnek: Tom Odell - Another Love). m ve c değerlerini değiştir.
+            { s: "Another Love", a: "Tom Odell", c: "25.jpg", m: "25.mp3" }
+        ];
+
+        let current = 0;
+        let audioPlayer = new Audio();
+        audioPlayer.volume = 0.6;
+        // specialText ve typewriter fonksiyonu silindi.
+
+        function handleStart() {
+            const overlay = document.getElementById('fadeOverlay');
+            overlay.style.opacity = "1";
+            setTimeout(() => {
+                document.getElementById('entry').style.display = 'none';
+                document.getElementById('stage').style.display = 'flex';
+                render();
+                playSong(0);
+                setTimeout(() => { overlay.style.opacity = "0"; document.getElementById('stage').style.opacity = "1"; }, 500);
+            }, 1500);
+        }
+
+        function render() {
+            const nb = document.getElementById('notebook');
+            nb.innerHTML = "";
+            // Şarkı sayfaları
+            playlist.forEach((item, i) => {
+                const p = document.createElement('div');
+                p.className = 'page';
+                p.style.zIndex = (playlist.length + 1) - i;
+                const progressWidth = (i / (playlist.length - 1)) * 100; // Progress bar hesabı düzeltildi
+                p.innerHTML = `
+                    <div class="cover-art" style="background-image: url('${item.c}')"></div>
+                    <p class="song-title">${item.s}</p><p class="artist">${item.a}</p>
+                    <div class="player-bar"><div class="progress" style="width: ${progressWidth}%"></div></div>
+                `; // personal-note div'i kaldırıldı
+                nb.appendChild(p);
+            });
+            // 25. Səhifədən sonrakı xüsusi not səhifəsi (p25) silindi.
+        }
+
+        function playSong(index) {
+            if(index < playlist.length) {
+                audioPlayer.pause();
+                audioPlayer.src = playlist[index].m;
+                audioPlayer.play().catch(e => {});
+            } else { audioPlayer.pause(); }
+        }
+
+        function next() {
+            const pages = document.querySelectorAll('.page');
+            const totalSongs = playlist.length;
+
+            if (current < totalSongs - 1) {
+                // Mahnı səhifələrini çevir
+                document.getElementById('flip').play();
+                pages[current].classList.add('flipped');
+                current++;
+                playSong(current);
+            } else if (current === totalSongs - 1) {
+                // Sonuncu (25-ci) mahnıdayıqsa və İleri-yə basılarsa
+                document.getElementById('flip').play();
+                pages[current].classList.add('flipped');
+                current++; // current artıq 25 olur
+                
+                audioPlayer.pause();
+
+                // Final Kapanış ekranına keç
+                setTimeout(() => {
+                    document.getElementById('stage').style.opacity = "0";
+                    setTimeout(() => {
+                        document.getElementById('stage').style.display = "none";
+                        document.getElementById('finalScreen').style.display = "flex";
+                        setTimeout(() => document.getElementById('finalScreen').style.opacity = "1", 100);
+                    }, 1000);
+                }, 1000);
+            }
+        }
+
+        function prev() {
+            const pages = document.querySelectorAll('.page');
+            if (current > 0) {
+                document.getElementById('flip').play();
+                current--;
+                pages[current].classList.remove('flipped');
+                if(current < playlist.length) playSong(current);
+                // typeWriter silindiyi üçün onunla bağlı təmizləmə də silindi
+            }
+        }
+    </script>
+</body>
+</html>
